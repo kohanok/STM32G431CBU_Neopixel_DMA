@@ -1,0 +1,9 @@
+usbd_desc.c:224:11:USBD_CDC_DeviceDescriptor	16	static
+usbd_desc.c:237:11:USBD_CDC_LangIDStrDescriptor	16	static
+usbd_desc.c:250:11:USBD_CDC_ProductStrDescriptor	16	static
+usbd_desc.c:269:11:USBD_CDC_ManufacturerStrDescriptor	16	static
+usbd_desc.c:282:11:USBD_CDC_SerialStrDescriptor	16	static
+usbd_desc.c:304:11:USBD_CDC_ConfigStrDescriptor	16	static
+usbd_desc.c:323:11:USBD_CDC_InterfaceStrDescriptor	16	static
+usbd_desc.c:341:13:Get_SerialNum	24	static
+usbd_desc.c:365:13:IntToUnicode	32	static
