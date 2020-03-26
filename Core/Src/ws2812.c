@@ -6,6 +6,7 @@
  */
 
 #include "ws2812.h"
+#include "main.h"
 
 #define BIT_PERIOD      (212)
 #define BIT_HIGH        (135)

@@ -38,6 +38,9 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef int bool;
+enum { false, true };
+
 
 /* USER CODE END ET */
 
@@ -59,6 +62,8 @@ void Error_Handler(void);
 /* USER CODE BEGIN EFP */
 void delay(uint32_t ms);
 uint32_t millis(void);
+int rotateLeft(int num, unsigned int rotation);
+int rotateRight(int num, unsigned int rotation);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

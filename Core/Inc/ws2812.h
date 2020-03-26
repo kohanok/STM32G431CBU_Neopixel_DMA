@@ -8,16 +8,13 @@
 #ifndef SRC_HW_DRIVER_WS2812_H_
 #define SRC_HW_DRIVER_WS2812_H_
 
-typedef int bool;
-enum { false, true };
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
+#include "main.h"
 #include <string.h>
 
 bool ws2812Init(void);

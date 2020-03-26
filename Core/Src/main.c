@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ws2812.h"
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +35,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_CNT 18
+#define LED_CNT 16
+#define rotr(x,n)   (((x) >> ((int)((n) & 0x1f))) | ((x) << ((int)((32 - ((n) & 0x1f))))))
+#define rotl(x,n)   (((x) << ((int)((n) & 0x1f))) | ((x) >> ((int)((32 - ((n) & 0x1f))))))
+
+//#define INT_SIZE 12							//sizeof(int)        // Size of int in bytes
+#define INT_BITS 	16								//INT_SIZE * 8 - 1   // Size of int in bits - 1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +49,10 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
+
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim17;
 DMA_HandleTypeDef hdma_tim2_ch1;
@@ -57,6 +67,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_SPI1_Init(void);
 static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -98,16 +109,28 @@ int main(void)
   MX_DMA_Init();
   MX_TIM2_Init();
   MX_USB_Device_Init();
+  MX_SPI1_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   ws2812Init();
   ws2812Begin(LED_CNT);
 
   uint32_t pre_time;
+  uint32_t led_time=100;
+  uint32_t led_count=10;
+	bool led_flg=false;
+
+	uint32_t test_count = 0;
+
   uint32_t led_index = 0;
   int32_t  led_index_pre = -1;
   uint8_t led_color = 0;
 
+	uint32_t led_mask= 0b1110000111;
+	uint32_t current_led=0;
+	uint32_t test2=0;
+	uint32_t test1=0;
+	//uint32_t led_index=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,30 +140,63 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    if (millis()-pre_time >= 50)
-    {
+		if(millis()-pre_time >= led_time)
+		{
+			pre_time = millis();
+			//test1 = rotr(led_mask, 1);
+			test2 = rotateLeft(led_mask, led_index%LED_CNT);
+			test1 = rotateRight(led_mask, led_index%LED_CNT);
 
-      pre_time = millis();
-      HAL_GPIO_TogglePin(LED_G_GPIO_Port, LED_G_Pin);
-      HAL_GPIO_TogglePin(LED_R_GPIO_Port, LED_R_Pin);
+			led_index++;
+			for(uint32_t j=0; j<12; j++) {
+				if( test2 >> j & 0x01){
+						ws2812SetColor(j, 255, 255, 255);
+				}else {
+					ws2812SetColor(j, 0, 0, 0);
+				}
+			}
+			for(uint32_t j=20; j>11; j--) {
+				if( test1 >> j & 0x01){
+						ws2812SetColor(j, 255, 255, 255);
+				}else {
+					ws2812SetColor(j, 0, 0, 0);
+				}
+			}
+		}
+//Break led pattern
+/*
+		if (millis()-pre_time >= led_time)
+		{
+			pre_time = millis();
+			led_count++;
+			//if(led_count == 40) {
+				//led_time = 100;
+			//}
+			if(led_count > 40) {
+				led_time = 1000;
+			}else {
+				led_time = 50;
+			}
+			if(led_count > 60) {
+					//led_time = 100;
+					led_count = 0;
+			}
 
-      if (led_color == 0) ws2812SetColor(led_index, 255, 0, 0);
-      if (led_color == 1) ws2812SetColor(led_index, 0, 255, 0);
-      if (led_color == 2) ws2812SetColor(led_index, 0, 0, 255);
-
-      if (led_index_pre >= 0)
-      {
-        ws2812SetColor(led_index_pre, 0, 0, 0);
-      }
-      led_index_pre = led_index;
-      led_index = (led_index + 1) % 18;
-
-      if (led_index == 0)
-      {
-        led_color = (led_color + 1) % 3;
-      }
-    }
+			if(led_flg) {
+				for(int i = 0; i < LED_CNT; i++) {
+					ws2812SetColor(i, 255, 0, 0);
+					led_flg = false;
+				}
+			}else {
+				for(int i = 0; i < LED_CNT; i++) {
+					ws2812SetColor(i, 0, 0, 0);
+					led_flg = true;
+				}
+			}
+		}
+*/
   }
+
   /* USER CODE END 3 */
 }
 
@@ -194,6 +250,46 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
 }
 
 /**
@@ -317,6 +413,7 @@ static void MX_DMA_Init(void)
   /* DMA controller clock enable */
   __HAL_RCC_DMAMUX1_CLK_ENABLE();
   __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
@@ -325,6 +422,12 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel2_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+  /* DMA2_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
+  /* DMA2_Channel2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
 
 }
 
@@ -376,6 +479,66 @@ uint32_t millis(void)
   return HAL_GetTick();
 }
 
+/**
+ * Function to rotate bits of a number to left.
+ *
+ * @num         Number to rotate.
+ * @rotation    Number of times to rotate left.
+ */
+int rotateLeft(int num, unsigned int rotation)
+{
+    int DROPPED_MSB;
+
+    // The effective rotation
+    rotation %= INT_BITS;
+
+
+    // Loop till rotation becomes 0
+    while(rotation--)
+    {
+        // Get MSB of num before it gets dropped
+        DROPPED_MSB = (num >> INT_BITS) & 1;
+
+        // Left rotate num by 1 and
+        // Set its dropped MSB as new LSB
+        num = (num << 1) | DROPPED_MSB;
+    }
+
+    return num;
+}
+
+
+
+/**
+ * Function to rotate bits of a number to right.
+ *
+ * @num         Number to rotate.
+ * @rotation    Number of times to rotate right.
+ */
+int rotateRight(int num, unsigned int rotation)
+{
+    int DROPPED_LSB;
+
+    // The effective rotation
+    rotation %= INT_BITS;
+
+
+    // Loop till rotation becomes 0
+    while(rotation--)
+    {
+        // Get LSB of num before it gets dropped
+        DROPPED_LSB = num & 1;
+
+        // Right shift num by 1 and
+        // Clear its MSB
+        num = (num >> 1) & (~(1 << INT_BITS));
+
+        // Set its dropped LSB as new MSB
+        num = num | (DROPPED_LSB << INT_BITS);
+    }
+
+    return num;
+}
 /* USER CODE END 4 */
 
 /**
