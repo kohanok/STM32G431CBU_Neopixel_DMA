@@ -140,6 +140,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    //void rainbow(int wait) {
+		for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+			for(int i=0; i<LED_CNT; i++) { // For each pixel in strip...
+				if(millis()-pre_time >= led_time)
+				{
+					pre_time = millis();
+
+					int pixelHue = firstPixelHue + (i * 65536L / LED_CNT);
+					setPixelColor(i, gamma32(ColorHSV(pixelHue, 255, 255)));
+				}
+			}
+		}
+
+    /*
 		if(millis()-pre_time >= led_time)
 		{
 			pre_time = millis();
@@ -163,6 +177,7 @@ int main(void)
 				}
 			}
 		}
+    */
 //Break led pattern
 /*
 		if (millis()-pre_time >= led_time)
