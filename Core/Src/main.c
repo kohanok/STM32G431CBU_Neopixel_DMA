@@ -115,8 +115,10 @@ int main(void)
   ws2812Init();
   ws2812Begin(LED_CNT);
 
-  uint32_t pre_time;
-  uint32_t led_time=100;
+  uint32_t pre_time=0;
+  uint32_t rainbow_pre_time=0;
+  uint32_t led_time=200;
+  uint32_t rainbow_led_time=20;
   uint32_t led_count=10;
 	bool led_flg=false;
 
@@ -140,44 +142,43 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //void rainbow(int wait) {
-		for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
-			for(int i=0; i<LED_CNT; i++) { // For each pixel in strip...
+		uint16_t i, j;
+		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
+			if(millis()-rainbow_pre_time >= rainbow_led_time)
+			{
+				rainbow_pre_time = millis();
+				j++;
+				for(i=0; i< LED_CNT; i++) {
+						setPixelColor(i, Wheel(((i * 256 / LED_CNT) + j) & 255));
+				}
+
+
 				if(millis()-pre_time >= led_time)
 				{
 					pre_time = millis();
+					test2 = rotateLeft(led_mask, led_index%LED_CNT);
+					test1 = rotateRight(led_mask, led_index%LED_CNT);
 
-					int pixelHue = firstPixelHue + (i * 65536L / LED_CNT);
-					setPixelColor(i, gamma32(ColorHSV(pixelHue, 255, 255)));
+					led_index++;
+					for(uint32_t j=0; j<12; j++) {
+						if( test2 >> j & 0x01){
+								ws2812SetColor(j, 255, 255, 255);
+						}else {
+							ws2812SetColor(j, 0, 0, 0);
+						}
+					}
+					for(uint32_t j=20; j>11; j--) {
+						if( test1 >> j & 0x01){
+								ws2812SetColor(j, 255, 255, 255);
+						}else {
+							ws2812SetColor(j, 0, 0, 0);
+						}
+					}
 				}
+
 			}
 		}
 
-    /*
-		if(millis()-pre_time >= led_time)
-		{
-			pre_time = millis();
-			//test1 = rotr(led_mask, 1);
-			test2 = rotateLeft(led_mask, led_index%LED_CNT);
-			test1 = rotateRight(led_mask, led_index%LED_CNT);
-
-			led_index++;
-			for(uint32_t j=0; j<12; j++) {
-				if( test2 >> j & 0x01){
-						ws2812SetColor(j, 255, 255, 255);
-				}else {
-					ws2812SetColor(j, 0, 0, 0);
-				}
-			}
-			for(uint32_t j=20; j>11; j--) {
-				if( test1 >> j & 0x01){
-						ws2812SetColor(j, 255, 255, 255);
-				}else {
-					ws2812SetColor(j, 0, 0, 0);
-				}
-			}
-		}
-    */
 //Break led pattern
 /*
 		if (millis()-pre_time >= led_time)

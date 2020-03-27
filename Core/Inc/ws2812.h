@@ -117,10 +117,11 @@ uint8_t		wOffset;    ///< Index of white (==rOffset if no white)
 bool ws2812Init(void);
 void ws2812Begin(uint32_t led_cnt);
 void ws2812SetColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue);
+void ws2812SetRanbowColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue);
 void setBrightness(uint8_t b);
 void setPixelColor(uint16_t n, uint32_t c);
 void theaterChase(uint32_t c, uint8_t wait);
-uint32_t Wheel(int8_t WheelPos);
+uint32_t Wheel(uint8_t WheelPos);
 uint32_t Color(uint8_t r, uint8_t g, uint8_t b);
 uint32_t gamma32(uint32_t x);
 uint8_t	gamma8(uint8_t x);

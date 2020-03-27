@@ -21,7 +21,7 @@ typedef struct
 } ws2812_t;
 
 static uint8_t led_buf[50 + 24*64];
-
+static uint8_t led_buf_rainbow[50 + 24*64];
 
 ws2812_t ws2812;
 extern TIM_HandleTypeDef htim2;
@@ -43,7 +43,7 @@ void ws2812Begin(uint32_t led_cnt)
 
 
   HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)led_buf, (50 + 24 *  ws2812.led_cnt) * 1);
-  HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)led_buf, (50 + 24 *  ws2812.led_cnt) * 1);
+  HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)led_buf_rainbow, (50 + 24 *  ws2812.led_cnt) * 1);
 }
 
 void ws2812SetColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue)
@@ -95,6 +95,54 @@ void ws2812SetColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue)
   memcpy(&led_buf[offset + index*24 + 8*2], b_bit, 8*1);
 }
 
+void ws2812SetRanbowColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue)
+{
+  uint8_t r_bit[8];
+  uint8_t g_bit[8];
+  uint8_t b_bit[8];
+
+  uint32_t offset;
+
+
+  for (int i=0; i<8; i++)
+  {
+    if (red & (1<<7))
+    {
+      r_bit[i] = BIT_HIGH;
+    }
+    else
+    {
+      r_bit[i] = BIT_LOW;
+    }
+    red <<= 1;
+
+    if (green & (1<<7))
+    {
+      g_bit[i] = BIT_HIGH;
+    }
+    else
+    {
+      g_bit[i] = BIT_LOW;
+    }
+    green <<= 1;
+
+    if (blue & (1<<7))
+    {
+      b_bit[i] = BIT_HIGH;
+    }
+    else
+    {
+      b_bit[i] = BIT_LOW;
+    }
+    blue <<= 1;
+  }
+
+  offset = 50;
+
+  memcpy(&led_buf_rainbow[offset + index*24 + 8*0], g_bit, 8*1);
+  memcpy(&led_buf_rainbow[offset + index*24 + 8*1], r_bit, 8*1);
+  memcpy(&led_buf_rainbow[offset + index*24 + 8*2], b_bit, 8*1);
+}
 
 void setBrightness(uint8_t b) {
   // Stored brightness value is different than what's passed.
@@ -159,20 +207,20 @@ void setPixelColor(uint16_t n, uint32_t c) {
     p[rOffset] = r;
     p[gOffset] = g;
     p[bOffset] = b;
-    ws2812SetColor(n, r, g , b);
+    ws2812SetRanbowColor(n, r, g , b);
   }
 
 }
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Wheel(int8_t WheelPos) {
+uint32_t Wheel(uint8_t WheelPos) {
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85) {
     return Color(255 - WheelPos * 3, 0, WheelPos * 3);
   }
   if(WheelPos < 170) {
-    WheelPos -= 85;
+  		WheelPos -= 85;
     return Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
   WheelPos -= 170;
