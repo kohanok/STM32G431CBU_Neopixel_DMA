@@ -40,6 +40,8 @@
 #define R_LED_CNT 128
 
 #define INT_BITS 	20								//INT_SIZE * 8 - 1   // Size of int in bits - 1
+bool g_break_flg = false;
+uint32_t g_speed = 0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/

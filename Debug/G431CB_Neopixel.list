@@ -39,11 +39,11 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  17 .debug_line   00017b26  00000000  00000000  000536d9  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000cfdd5  00000000  00000000  0006b1ff  2**0
+ 18 .debug_str    000cfddf  00000000  00000000  0006b1ff  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  0013afd4  2**0
+ 19 .comment      0000007b  00000000  00000000  0013afde  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00007070  00000000  00000000  0013b050  2**2
+ 20 .debug_frame  00007070  00000000  00000000  0013b05c  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -129,7 +129,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of Break_Task */
-  osThreadDef(Break_Task, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(Break_Task, StartBreak_Task, osPriorityNormal, 0, 128);
  8000252:	4b1a      	ldr	r3, [pc, #104]	; (80002bc <main+0x9c>)
  8000254:	f107 042c 	add.w	r4, r7, #44	; 0x2c
  8000258:	461d      	mov	r5, r3
@@ -147,7 +147,7 @@ int main(void)
  8000272:	601a      	str	r2, [r3, #0]
 
   /* definition and creation of RainBow_Task */
-  osThreadDef(RainBow_Task, StartTask02, osPriorityLow, 0, 128);
+  osThreadDef(RainBow_Task, StartRainBow_Task, osPriorityLow, 0, 128);
  8000274:	4b13      	ldr	r3, [pc, #76]	; (80002c4 <main+0xa4>)
  8000276:	f107 0418 	add.w	r4, r7, #24
  800027a:	461d      	mov	r5, r3
@@ -165,7 +165,7 @@ int main(void)
  8000294:	601a      	str	r2, [r3, #0]
 
   /* definition and creation of AS504X_Task */
-  osThreadDef(AS504X_Task, StartTask03, osPriorityLow, 0, 128);
+  osThreadDef(AS504X_Task, StartAS504X_Task, osPriorityLow, 0, 128);
  8000296:	4b0d      	ldr	r3, [pc, #52]	; (80002cc <main+0xac>)
  8000298:	1d3c      	adds	r4, r7, #4
  800029a:	461d      	mov	r5, r3
@@ -372,9 +372,9 @@ static void MX_SPI1_Init(void)
  80003c0:	4b14      	ldr	r3, [pc, #80]	; (8000414 <MX_SPI1_Init+0x74>)
  80003c2:	2200      	movs	r2, #0
  80003c4:	611a      	str	r2, [r3, #16]
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
  80003c6:	4b13      	ldr	r3, [pc, #76]	; (8000414 <MX_SPI1_Init+0x74>)
- 80003c8:	2200      	movs	r2, #0
+ 80003c8:	2201      	movs	r2, #1
  80003ca:	615a      	str	r2, [r3, #20]
   hspi1.Init.NSS = SPI_NSS_SOFT;
  80003cc:	4b11      	ldr	r3, [pc, #68]	; (8000414 <MX_SPI1_Init+0x74>)
@@ -404,9 +404,9 @@ static void MX_SPI1_Init(void)
  80003f2:	4b08      	ldr	r3, [pc, #32]	; (8000414 <MX_SPI1_Init+0x74>)
  80003f4:	2200      	movs	r2, #0
  80003f6:	631a      	str	r2, [r3, #48]	; 0x30
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
  80003f8:	4b06      	ldr	r3, [pc, #24]	; (8000414 <MX_SPI1_Init+0x74>)
- 80003fa:	2208      	movs	r2, #8
+ 80003fa:	2200      	movs	r2, #0
  80003fc:	635a      	str	r2, [r3, #52]	; 0x34
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
  80003fe:	4805      	ldr	r0, [pc, #20]	; (8000414 <MX_SPI1_Init+0x74>)
@@ -1097,12 +1097,12 @@ int rotateRight(int num, unsigned int rotation)
  80007f2:	bf00      	nop
  80007f4:	cccccccd 	.word	0xcccccccd
 
-080007f8 <StartDefaultTask>:
+080007f8 <StartBreak_Task>:
   * @param  argument: Not used 
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+/* USER CODE END Header_StartBreak_Task */
+void StartBreak_Task(void const * argument)
 {
  80007f8:	b580      	push	{r7, lr}
  80007fa:	b08e      	sub	sp, #56	; 0x38
@@ -1146,32 +1146,32 @@ void StartDefaultTask(void const * argument)
  800082a:	1ad3      	subs	r3, r2, r3
  800082c:	6b3a      	ldr	r2, [r7, #48]	; 0x30
  800082e:	429a      	cmp	r2, r3
- 8000830:	f200 80ae 	bhi.w	8000990 <StartDefaultTask+0x198>
+ 8000830:	f200 80ae 	bhi.w	8000990 <StartBreak_Task+0x198>
 		{
 			pre_time = millis();
  8000834:	f7ff ff80 	bl	8000738 <millis>
  8000838:	6378      	str	r0, [r7, #52]	; 0x34
 			if(g_break_flg == false) {
- 800083a:	4b57      	ldr	r3, [pc, #348]	; (8000998 <StartDefaultTask+0x1a0>)
+ 800083a:	4b57      	ldr	r3, [pc, #348]	; (8000998 <StartBreak_Task+0x1a0>)
  800083c:	681b      	ldr	r3, [r3, #0]
  800083e:	2b00      	cmp	r3, #0
- 8000840:	d16e      	bne.n	8000920 <StartDefaultTask+0x128>
+ 8000840:	d16e      	bne.n	8000920 <StartBreak_Task+0x128>
 					led_time = 200;
 				}
 				else {
 					led_time = 50;
 				}*/
 				led_time = g_speed/10;
- 8000842:	4b56      	ldr	r3, [pc, #344]	; (800099c <StartDefaultTask+0x1a4>)
+ 8000842:	4b56      	ldr	r3, [pc, #344]	; (800099c <StartBreak_Task+0x1a4>)
  8000844:	681b      	ldr	r3, [r3, #0]
- 8000846:	4a56      	ldr	r2, [pc, #344]	; (80009a0 <StartDefaultTask+0x1a8>)
+ 8000846:	4a56      	ldr	r2, [pc, #344]	; (80009a0 <StartBreak_Task+0x1a8>)
  8000848:	fba2 2303 	umull	r2, r3, r2, r3
  800084c:	08db      	lsrs	r3, r3, #3
  800084e:	633b      	str	r3, [r7, #48]	; 0x30
 				if(led_time < 50)
  8000850:	6b3b      	ldr	r3, [r7, #48]	; 0x30
  8000852:	2b31      	cmp	r3, #49	; 0x31
- 8000854:	d801      	bhi.n	800085a <StartDefaultTask+0x62>
+ 8000854:	d801      	bhi.n	800085a <StartBreak_Task+0x62>
 					led_time = 50;
  8000856:	2332      	movs	r3, #50	; 0x32
  8000858:	633b      	str	r3, [r7, #48]	; 0x30
@@ -1181,7 +1181,7 @@ void StartDefaultTask(void const * argument)
 				firstled = rotateLeft(led_mask, led_index%B_LED_CNT);
  800085e:	68b8      	ldr	r0, [r7, #8]
  8000860:	6af9      	ldr	r1, [r7, #44]	; 0x2c
- 8000862:	4b4f      	ldr	r3, [pc, #316]	; (80009a0 <StartDefaultTask+0x1a8>)
+ 8000862:	4b4f      	ldr	r3, [pc, #316]	; (80009a0 <StartBreak_Task+0x1a8>)
  8000864:	fba3 2301 	umull	r2, r3, r3, r1
  8000868:	091a      	lsrs	r2, r3, #4
  800086a:	4613      	mov	r3, r2
@@ -1196,7 +1196,7 @@ void StartDefaultTask(void const * argument)
 				halfled = rotateRight(led_mask, led_index%B_LED_CNT);
  800087e:	68b8      	ldr	r0, [r7, #8]
  8000880:	6af9      	ldr	r1, [r7, #44]	; 0x2c
- 8000882:	4b47      	ldr	r3, [pc, #284]	; (80009a0 <StartDefaultTask+0x1a8>)
+ 8000882:	4b47      	ldr	r3, [pc, #284]	; (80009a0 <StartBreak_Task+0x1a8>)
  8000884:	fba3 2301 	umull	r2, r3, r3, r1
  8000888:	091a      	lsrs	r2, r3, #4
  800088a:	4613      	mov	r3, r2
@@ -1216,21 +1216,21 @@ void StartDefaultTask(void const * argument)
 				for(uint32_t j=0; j<12; j++) {
  80008a4:	2300      	movs	r3, #0
  80008a6:	623b      	str	r3, [r7, #32]
- 80008a8:	e017      	b.n	80008da <StartDefaultTask+0xe2>
+ 80008a8:	e017      	b.n	80008da <StartBreak_Task+0xe2>
 					if( firstled >> j & 0x01){
  80008aa:	693a      	ldr	r2, [r7, #16]
  80008ac:	6a3b      	ldr	r3, [r7, #32]
  80008ae:	fa22 f303 	lsr.w	r3, r2, r3
  80008b2:	f003 0301 	and.w	r3, r3, #1
  80008b6:	2b00      	cmp	r3, #0
- 80008b8:	d006      	beq.n	80008c8 <StartDefaultTask+0xd0>
+ 80008b8:	d006      	beq.n	80008c8 <StartBreak_Task+0xd0>
 							ws2812SetColor(j, 255, 255, 255);
  80008ba:	23ff      	movs	r3, #255	; 0xff
  80008bc:	22ff      	movs	r2, #255	; 0xff
  80008be:	21ff      	movs	r1, #255	; 0xff
  80008c0:	6a38      	ldr	r0, [r7, #32]
  80008c2:	f000 fc3d 	bl	8001140 <ws2812SetColor>
- 80008c6:	e005      	b.n	80008d4 <StartDefaultTask+0xdc>
+ 80008c6:	e005      	b.n	80008d4 <StartBreak_Task+0xdc>
 					}else {
 						ws2812SetColor(j, 0, 0, 0);
  80008c8:	2300      	movs	r3, #0
@@ -1244,13 +1244,13 @@ void StartDefaultTask(void const * argument)
  80008d8:	623b      	str	r3, [r7, #32]
  80008da:	6a3b      	ldr	r3, [r7, #32]
  80008dc:	2b0b      	cmp	r3, #11
- 80008de:	d9e4      	bls.n	80008aa <StartDefaultTask+0xb2>
+ 80008de:	d9e4      	bls.n	80008aa <StartBreak_Task+0xb2>
 					}
 				}
 				for(uint32_t j=20; j>11; j--) {
  80008e0:	2314      	movs	r3, #20
  80008e2:	61fb      	str	r3, [r7, #28]
- 80008e4:	e018      	b.n	8000918 <StartDefaultTask+0x120>
+ 80008e4:	e018      	b.n	8000918 <StartBreak_Task+0x120>
 					if( halfled >> (j-11) & 0x01){
  80008e6:	69fb      	ldr	r3, [r7, #28]
  80008e8:	3b0b      	subs	r3, #11
@@ -1258,14 +1258,14 @@ void StartDefaultTask(void const * argument)
  80008ec:	fa22 f303 	lsr.w	r3, r2, r3
  80008f0:	f003 0301 	and.w	r3, r3, #1
  80008f4:	2b00      	cmp	r3, #0
- 80008f6:	d006      	beq.n	8000906 <StartDefaultTask+0x10e>
+ 80008f6:	d006      	beq.n	8000906 <StartBreak_Task+0x10e>
 							ws2812SetColor(j, 255, 255, 255);
  80008f8:	23ff      	movs	r3, #255	; 0xff
  80008fa:	22ff      	movs	r2, #255	; 0xff
  80008fc:	21ff      	movs	r1, #255	; 0xff
  80008fe:	69f8      	ldr	r0, [r7, #28]
  8000900:	f000 fc1e 	bl	8001140 <ws2812SetColor>
- 8000904:	e005      	b.n	8000912 <StartDefaultTask+0x11a>
+ 8000904:	e005      	b.n	8000912 <StartBreak_Task+0x11a>
 					}else {
 						ws2812SetColor(j, 0, 0, 0);
  8000906:	2300      	movs	r3, #0
@@ -1279,8 +1279,8 @@ void StartDefaultTask(void const * argument)
  8000916:	61fb      	str	r3, [r7, #28]
  8000918:	69fb      	ldr	r3, [r7, #28]
  800091a:	2b0b      	cmp	r3, #11
- 800091c:	d8e3      	bhi.n	80008e6 <StartDefaultTask+0xee>
- 800091e:	e037      	b.n	8000990 <StartDefaultTask+0x198>
+ 800091c:	d8e3      	bhi.n	80008e6 <StartBreak_Task+0xee>
+ 800091e:	e037      	b.n	8000990 <StartBreak_Task+0x198>
 					}
 				}
 			}
@@ -1292,11 +1292,11 @@ void StartDefaultTask(void const * argument)
 				if(led_count > 30) {
  8000926:	6a7b      	ldr	r3, [r7, #36]	; 0x24
  8000928:	2b1e      	cmp	r3, #30
- 800092a:	d903      	bls.n	8000934 <StartDefaultTask+0x13c>
+ 800092a:	d903      	bls.n	8000934 <StartBreak_Task+0x13c>
 					led_time = 500;
  800092c:	f44f 73fa 	mov.w	r3, #500	; 0x1f4
  8000930:	633b      	str	r3, [r7, #48]	; 0x30
- 8000932:	e001      	b.n	8000938 <StartDefaultTask+0x140>
+ 8000932:	e001      	b.n	8000938 <StartBreak_Task+0x140>
 				}else {
 					led_time = 50;
  8000934:	2332      	movs	r3, #50	; 0x32
@@ -1305,10 +1305,10 @@ void StartDefaultTask(void const * argument)
 				if(led_count > 40) {
  8000938:	6a7b      	ldr	r3, [r7, #36]	; 0x24
  800093a:	2b28      	cmp	r3, #40	; 0x28
- 800093c:	d902      	bls.n	8000944 <StartDefaultTask+0x14c>
+ 800093c:	d902      	bls.n	8000944 <StartBreak_Task+0x14c>
 						//led_count = 0;
 						g_break_flg =false;
- 800093e:	4b16      	ldr	r3, [pc, #88]	; (8000998 <StartDefaultTask+0x1a0>)
+ 800093e:	4b16      	ldr	r3, [pc, #88]	; (8000998 <StartBreak_Task+0x1a0>)
  8000940:	2200      	movs	r2, #0
  8000942:	601a      	str	r2, [r3, #0]
 				}
@@ -1316,11 +1316,11 @@ void StartDefaultTask(void const * argument)
 				if(led_flg) {
  8000944:	6abb      	ldr	r3, [r7, #40]	; 0x28
  8000946:	2b00      	cmp	r3, #0
- 8000948:	d011      	beq.n	800096e <StartDefaultTask+0x176>
+ 8000948:	d011      	beq.n	800096e <StartBreak_Task+0x176>
 					for(int i = 0; i < B_LED_CNT; i++) {
  800094a:	2300      	movs	r3, #0
  800094c:	61bb      	str	r3, [r7, #24]
- 800094e:	e00a      	b.n	8000966 <StartDefaultTask+0x16e>
+ 800094e:	e00a      	b.n	8000966 <StartBreak_Task+0x16e>
 						ws2812SetColor(i, 255, 0, 0);
  8000950:	69b8      	ldr	r0, [r7, #24]
  8000952:	2300      	movs	r3, #0
@@ -1336,14 +1336,14 @@ void StartDefaultTask(void const * argument)
  8000964:	61bb      	str	r3, [r7, #24]
  8000966:	69bb      	ldr	r3, [r7, #24]
  8000968:	2b13      	cmp	r3, #19
- 800096a:	ddf1      	ble.n	8000950 <StartDefaultTask+0x158>
- 800096c:	e010      	b.n	8000990 <StartDefaultTask+0x198>
+ 800096a:	ddf1      	ble.n	8000950 <StartBreak_Task+0x158>
+ 800096c:	e010      	b.n	8000990 <StartBreak_Task+0x198>
 					}
 				}else {
 					for(int i = 0; i < B_LED_CNT; i++) {
  800096e:	2300      	movs	r3, #0
  8000970:	617b      	str	r3, [r7, #20]
- 8000972:	e00a      	b.n	800098a <StartDefaultTask+0x192>
+ 8000972:	e00a      	b.n	800098a <StartBreak_Task+0x192>
 						ws2812SetColor(i, 0, 0, 0);
  8000974:	6978      	ldr	r0, [r7, #20]
  8000976:	2300      	movs	r3, #0
@@ -1359,7 +1359,7 @@ void StartDefaultTask(void const * argument)
  8000988:	617b      	str	r3, [r7, #20]
  800098a:	697b      	ldr	r3, [r7, #20]
  800098c:	2b13      	cmp	r3, #19
- 800098e:	ddf1      	ble.n	8000974 <StartDefaultTask+0x17c>
+ 800098e:	ddf1      	ble.n	8000974 <StartBreak_Task+0x17c>
 					}
 				}
 			}
@@ -1368,29 +1368,28 @@ void StartDefaultTask(void const * argument)
  8000990:	2001      	movs	r0, #1
  8000992:	f007 fb0f 	bl	8007fb4 <osDelay>
 		if(millis()-pre_time >= led_time)
- 8000996:	e744      	b.n	8000822 <StartDefaultTask+0x2a>
+ 8000996:	e744      	b.n	8000822 <StartBreak_Task+0x2a>
  8000998:	200001a0 	.word	0x200001a0
  800099c:	200001a4 	.word	0x200001a4
  80009a0:	cccccccd 	.word	0xcccccccd
 
-080009a4 <StartTask02>:
+080009a4 <StartRainBow_Task>:
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void const * argument)
+/* USER CODE END Header_StartRainBow_Task */
+void StartRainBow_Task(void const * argument)
 {
  80009a4:	b580      	push	{r7, lr}
  80009a6:	b08a      	sub	sp, #40	; 0x28
  80009a8:	af00      	add	r7, sp, #0
  80009aa:	6078      	str	r0, [r7, #4]
-  /* USER CODE BEGIN StartTask02 */
+  /* USER CODE BEGIN StartRainBow_Task */
   /* Infinite loop */
-
-  uint32_t rainbow_pre_time=0;
+	uint32_t rainbow_pre_time=0;
  80009ac:	2300      	movs	r3, #0
  80009ae:	627b      	str	r3, [r7, #36]	; 0x24
-  uint32_t rainbow_led_time=10;
+	uint32_t rainbow_led_time=10;
  80009b0:	230a      	movs	r3, #10
  80009b2:	623b      	str	r3, [r7, #32]
 	bool led_flg=false;
@@ -1399,13 +1398,13 @@ void StartTask02(void const * argument)
 	uint32_t led_count = 0;
  80009b8:	2300      	movs	r3, #0
  80009ba:	60fb      	str	r3, [r7, #12]
-  for(;;)
-  {
+	for(;;)
+	{
 		uint16_t i, j;
 		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
  80009bc:	2300      	movs	r3, #0
  80009be:	833b      	strh	r3, [r7, #24]
- 80009c0:	e06e      	b.n	8000aa0 <StartTask02+0xfc>
+ 80009c0:	e06e      	b.n	8000aa0 <StartRainBow_Task+0xfc>
 			if(millis()-rainbow_pre_time >= rainbow_led_time)
  80009c2:	f7ff feb9 	bl	8000738 <millis>
  80009c6:	4602      	mov	r2, r0
@@ -1413,7 +1412,7 @@ void StartTask02(void const * argument)
  80009ca:	1ad3      	subs	r3, r2, r3
  80009cc:	6a3a      	ldr	r2, [r7, #32]
  80009ce:	429a      	cmp	r2, r3
- 80009d0:	d866      	bhi.n	8000aa0 <StartTask02+0xfc>
+ 80009d0:	d866      	bhi.n	8000aa0 <StartRainBow_Task+0xfc>
 			{
 				rainbow_pre_time = millis();
  80009d2:	f7ff feb1 	bl	8000738 <millis>
@@ -1429,22 +1428,22 @@ void StartTask02(void const * argument)
  80009e2:	230a      	movs	r3, #10
  80009e4:	623b      	str	r3, [r7, #32]
 				if(g_break_flg == false) {
- 80009e6:	4b32      	ldr	r3, [pc, #200]	; (8000ab0 <StartTask02+0x10c>)
+ 80009e6:	4b32      	ldr	r3, [pc, #200]	; (8000ab0 <StartRainBow_Task+0x10c>)
  80009e8:	681b      	ldr	r3, [r3, #0]
  80009ea:	2b00      	cmp	r3, #0
- 80009ec:	d11f      	bne.n	8000a2e <StartTask02+0x8a>
+ 80009ec:	d11f      	bne.n	8000a2e <StartRainBow_Task+0x8a>
 					led_count = 0;
  80009ee:	2300      	movs	r3, #0
  80009f0:	60fb      	str	r3, [r7, #12]
 					for(i=0; i< R_LED_CNT; i++) {
  80009f2:	2300      	movs	r3, #0
  80009f4:	837b      	strh	r3, [r7, #26]
- 80009f6:	e016      	b.n	8000a26 <StartTask02+0x82>
+ 80009f6:	e016      	b.n	8000a26 <StartRainBow_Task+0x82>
 						setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
  80009f8:	8b7b      	ldrh	r3, [r7, #26]
  80009fa:	021b      	lsls	r3, r3, #8
  80009fc:	2b00      	cmp	r3, #0
- 80009fe:	da00      	bge.n	8000a02 <StartTask02+0x5e>
+ 80009fe:	da00      	bge.n	8000a02 <StartRainBow_Task+0x5e>
  8000a00:	337f      	adds	r3, #127	; 0x7f
  8000a02:	11db      	asrs	r3, r3, #7
  8000a04:	b2da      	uxtb	r2, r3
@@ -1465,8 +1464,8 @@ void StartTask02(void const * argument)
  8000a24:	837b      	strh	r3, [r7, #26]
  8000a26:	8b7b      	ldrh	r3, [r7, #26]
  8000a28:	2b7f      	cmp	r3, #127	; 0x7f
- 8000a2a:	d9e5      	bls.n	80009f8 <StartTask02+0x54>
- 8000a2c:	e038      	b.n	8000aa0 <StartTask02+0xfc>
+ 8000a2a:	d9e5      	bls.n	80009f8 <StartRainBow_Task+0x54>
+ 8000a2c:	e038      	b.n	8000aa0 <StartRainBow_Task+0xfc>
 					}
 				}
 				else{ // break
@@ -1477,11 +1476,11 @@ void StartTask02(void const * argument)
 					if(led_count > 30) {
  8000a34:	68fb      	ldr	r3, [r7, #12]
  8000a36:	2b1e      	cmp	r3, #30
- 8000a38:	d903      	bls.n	8000a42 <StartTask02+0x9e>
+ 8000a38:	d903      	bls.n	8000a42 <StartRainBow_Task+0x9e>
 						rainbow_led_time = 500;
  8000a3a:	f44f 73fa 	mov.w	r3, #500	; 0x1f4
  8000a3e:	623b      	str	r3, [r7, #32]
- 8000a40:	e001      	b.n	8000a46 <StartTask02+0xa2>
+ 8000a40:	e001      	b.n	8000a46 <StartRainBow_Task+0xa2>
 					}else {
 						rainbow_led_time = 50;
  8000a42:	2332      	movs	r3, #50	; 0x32
@@ -1490,10 +1489,10 @@ void StartTask02(void const * argument)
 					if(led_count > 40) {
  8000a46:	68fb      	ldr	r3, [r7, #12]
  8000a48:	2b28      	cmp	r3, #40	; 0x28
- 8000a4a:	d902      	bls.n	8000a52 <StartTask02+0xae>
+ 8000a4a:	d902      	bls.n	8000a52 <StartRainBow_Task+0xae>
 							//led_count = 0;
 							g_break_flg =false;
- 8000a4c:	4b18      	ldr	r3, [pc, #96]	; (8000ab0 <StartTask02+0x10c>)
+ 8000a4c:	4b18      	ldr	r3, [pc, #96]	; (8000ab0 <StartRainBow_Task+0x10c>)
  8000a4e:	2200      	movs	r2, #0
  8000a50:	601a      	str	r2, [r3, #0]
 					}
@@ -1501,11 +1500,11 @@ void StartTask02(void const * argument)
 					if(led_flg) {
  8000a52:	69fb      	ldr	r3, [r7, #28]
  8000a54:	2b00      	cmp	r3, #0
- 8000a56:	d012      	beq.n	8000a7e <StartTask02+0xda>
+ 8000a56:	d012      	beq.n	8000a7e <StartRainBow_Task+0xda>
 						for(int i = 0; i < B_LED_CNT; i++) {
  8000a58:	2300      	movs	r3, #0
  8000a5a:	617b      	str	r3, [r7, #20]
- 8000a5c:	e00b      	b.n	8000a76 <StartTask02+0xd2>
+ 8000a5c:	e00b      	b.n	8000a76 <StartRainBow_Task+0xd2>
 							setPixelColor(i, 0xff0000);
  8000a5e:	697b      	ldr	r3, [r7, #20]
  8000a60:	b29b      	uxth	r3, r3
@@ -1521,14 +1520,14 @@ void StartTask02(void const * argument)
  8000a74:	617b      	str	r3, [r7, #20]
  8000a76:	697b      	ldr	r3, [r7, #20]
  8000a78:	2b13      	cmp	r3, #19
- 8000a7a:	ddf0      	ble.n	8000a5e <StartTask02+0xba>
- 8000a7c:	e010      	b.n	8000aa0 <StartTask02+0xfc>
+ 8000a7a:	ddf0      	ble.n	8000a5e <StartRainBow_Task+0xba>
+ 8000a7c:	e010      	b.n	8000aa0 <StartRainBow_Task+0xfc>
 						}
 					}else {
 						for(int i = 0; i < B_LED_CNT; i++) {
  8000a7e:	2300      	movs	r3, #0
  8000a80:	613b      	str	r3, [r7, #16]
- 8000a82:	e00a      	b.n	8000a9a <StartTask02+0xf6>
+ 8000a82:	e00a      	b.n	8000a9a <StartRainBow_Task+0xf6>
 							setPixelColor(i, 0);
  8000a84:	693b      	ldr	r3, [r7, #16]
  8000a86:	b29b      	uxth	r3, r3
@@ -1544,11 +1543,11 @@ void StartTask02(void const * argument)
  8000a98:	613b      	str	r3, [r7, #16]
  8000a9a:	693b      	ldr	r3, [r7, #16]
  8000a9c:	2b13      	cmp	r3, #19
- 8000a9e:	ddf1      	ble.n	8000a84 <StartTask02+0xe0>
+ 8000a9e:	ddf1      	ble.n	8000a84 <StartRainBow_Task+0xe0>
 		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
  8000aa0:	8b3b      	ldrh	r3, [r7, #24]
  8000aa2:	f5b3 6fa0 	cmp.w	r3, #1280	; 0x500
- 8000aa6:	d38c      	bcc.n	80009c2 <StartTask02+0x1e>
+ 8000aa6:	d38c      	bcc.n	80009c2 <StartRainBow_Task+0x1e>
 						}
 					}
 				}
@@ -1557,22 +1556,22 @@ void StartTask02(void const * argument)
 		osDelay(1);
  8000aa8:	2001      	movs	r0, #1
  8000aaa:	f007 fa83 	bl	8007fb4 <osDelay>
-  {
- 8000aae:	e785      	b.n	80009bc <StartTask02+0x18>
+	{
+ 8000aae:	e785      	b.n	80009bc <StartRainBow_Task+0x18>
  8000ab0:	200001a0 	.word	0x200001a0
 
-08000ab4 <StartTask03>:
+08000ab4 <StartAS504X_Task>:
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void const * argument)
+/* USER CODE END Header_StartAS504X_Task */
+void StartAS504X_Task(void const * argument)
 {
  8000ab4:	b580      	push	{r7, lr}
  8000ab6:	b086      	sub	sp, #24
  8000ab8:	af00      	add	r7, sp, #0
  8000aba:	6078      	str	r0, [r7, #4]
-  /* USER CODE BEGIN StartTask03 */
+  /* USER CODE BEGIN StartAS504X_Task */
   /* Infinite loop */
   uint32_t Task03_pre_time = 0;
  8000abc:	2300      	movs	r3, #0
@@ -1592,37 +1591,37 @@ void StartTask03(void const * argument)
  8000ad0:	1ad3      	subs	r3, r2, r3
  8000ad2:	693a      	ldr	r2, [r7, #16]
  8000ad4:	429a      	cmp	r2, r3
- 8000ad6:	d816      	bhi.n	8000b06 <StartTask03+0x52>
+ 8000ad6:	d816      	bhi.n	8000b06 <StartAS504X_Task+0x52>
 		{
 			Task03_pre_time = millis();
  8000ad8:	f7ff fe2e 	bl	8000738 <millis>
  8000adc:	6178      	str	r0, [r7, #20]
 			g_speed += 10;
- 8000ade:	4b0c      	ldr	r3, [pc, #48]	; (8000b10 <StartTask03+0x5c>)
+ 8000ade:	4b0c      	ldr	r3, [pc, #48]	; (8000b10 <StartAS504X_Task+0x5c>)
  8000ae0:	681b      	ldr	r3, [r3, #0]
  8000ae2:	330a      	adds	r3, #10
- 8000ae4:	4a0a      	ldr	r2, [pc, #40]	; (8000b10 <StartTask03+0x5c>)
+ 8000ae4:	4a0a      	ldr	r2, [pc, #40]	; (8000b10 <StartAS504X_Task+0x5c>)
  8000ae6:	6013      	str	r3, [r2, #0]
 			if(g_speed>1000) {
- 8000ae8:	4b09      	ldr	r3, [pc, #36]	; (8000b10 <StartTask03+0x5c>)
+ 8000ae8:	4b09      	ldr	r3, [pc, #36]	; (8000b10 <StartAS504X_Task+0x5c>)
  8000aea:	681b      	ldr	r3, [r3, #0]
  8000aec:	f5b3 7f7a 	cmp.w	r3, #1000	; 0x3e8
- 8000af0:	d902      	bls.n	8000af8 <StartTask03+0x44>
+ 8000af0:	d902      	bls.n	8000af8 <StartAS504X_Task+0x44>
 				g_speed = 0;
- 8000af2:	4b07      	ldr	r3, [pc, #28]	; (8000b10 <StartTask03+0x5c>)
+ 8000af2:	4b07      	ldr	r3, [pc, #28]	; (8000b10 <StartAS504X_Task+0x5c>)
  8000af4:	2200      	movs	r2, #0
  8000af6:	601a      	str	r2, [r3, #0]
 			}
 			if(g_break_flg == false) {
- 8000af8:	4b06      	ldr	r3, [pc, #24]	; (8000b14 <StartTask03+0x60>)
+ 8000af8:	4b06      	ldr	r3, [pc, #24]	; (8000b14 <StartAS504X_Task+0x60>)
  8000afa:	681b      	ldr	r3, [r3, #0]
  8000afc:	2b00      	cmp	r3, #0
- 8000afe:	d002      	beq.n	8000b06 <StartTask03+0x52>
+ 8000afe:	d002      	beq.n	8000b06 <StartAS504X_Task+0x52>
 				//g_break_flg = true;
 			}
 			else {
 				g_break_flg = false;
- 8000b00:	4b04      	ldr	r3, [pc, #16]	; (8000b14 <StartTask03+0x60>)
+ 8000b00:	4b04      	ldr	r3, [pc, #16]	; (8000b14 <StartAS504X_Task+0x60>)
  8000b02:	2200      	movs	r2, #0
  8000b04:	601a      	str	r2, [r3, #0]
 			}
@@ -1631,7 +1630,7 @@ void StartTask03(void const * argument)
  8000b06:	2001      	movs	r0, #1
  8000b08:	f007 fa54 	bl	8007fb4 <osDelay>
 		if (millis()-Task03_pre_time >= Task03_led_time)
- 8000b0c:	e7dc      	b.n	8000ac8 <StartTask03+0x14>
+ 8000b0c:	e7dc      	b.n	8000ac8 <StartAS504X_Task+0x14>
  8000b0e:	bf00      	nop
  8000b10:	200001a4 	.word	0x200001a4
  8000b14:	200001a0 	.word	0x200001a0
