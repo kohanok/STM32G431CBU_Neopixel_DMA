@@ -60,7 +60,6 @@ DMA_HandleTypeDef hdma_tim17_ch1;
 osThreadId Break_TaskHandle;
 osThreadId RainBow_TaskHandle;
 osThreadId AS504X_TaskHandle;
-bool g_break_flg = false;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -72,9 +71,9 @@ static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM17_Init(void);
-void StartDefaultTask(void const * argument);
-void StartTask02(void const * argument);
-void StartTask03(void const * argument);
+void StartBreak_Task(void const * argument);
+void StartRainBow_Task(void const * argument);
+void StartAS504X_Task(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -143,16 +142,17 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of Break_Task */
-  osThreadDef(Break_Task, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadDef(Break_Task, StartBreak_Task, osPriorityNormal, 0, 128);
   Break_TaskHandle = osThreadCreate(osThread(Break_Task), NULL);
 
   /* definition and creation of RainBow_Task */
-  osThreadDef(RainBow_Task, StartTask02, osPriorityLow, 0, 128);
+  osThreadDef(RainBow_Task, StartRainBow_Task, osPriorityLow, 0, 128);
   RainBow_TaskHandle = osThreadCreate(osThread(RainBow_Task), NULL);
 
   /* definition and creation of AS504X_Task */
-  osThreadDef(AS504X_Task, StartTask03, osPriorityLow, 0, 128);
+  osThreadDef(AS504X_Task, StartAS504X_Task, osPriorityLow, 0, 128);
   AS504X_TaskHandle = osThreadCreate(osThread(AS504X_Task), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -248,7 +248,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
   hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
@@ -256,7 +256,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -516,14 +516,14 @@ int rotateRight(int num, unsigned int rotation)
 }
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartBreak_Task */
 /**
   * @brief  Function implementing the Break_Task thread.
   * @param  argument: Not used 
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+/* USER CODE END Header_StartBreak_Task */
+void StartBreak_Task(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
@@ -544,7 +544,16 @@ void StartDefaultTask(void const * argument)
 		{
 			pre_time = millis();
 			if(g_break_flg == false) {
-				led_time = 200;
+				/*
+				if(g_speed < 1000) {
+					led_time = 200;
+				}
+				else {
+					led_time = 50;
+				}*/
+				led_time = g_speed/10;
+				if(led_time < 50)
+					led_time = 50;
 				led_count = 0;
 				firstled = rotateLeft(led_mask, led_index%B_LED_CNT);
 				halfled = rotateRight(led_mask, led_index%B_LED_CNT);
@@ -595,24 +604,23 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */ 
 }
 
-/* USER CODE BEGIN Header_StartTask02 */
+/* USER CODE BEGIN Header_StartRainBow_Task */
 /**
 * @brief Function implementing the RainBow_Task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void const * argument)
+/* USER CODE END Header_StartRainBow_Task */
+void StartRainBow_Task(void const * argument)
 {
-  /* USER CODE BEGIN StartTask02 */
+  /* USER CODE BEGIN StartRainBow_Task */
   /* Infinite loop */
-
-  uint32_t rainbow_pre_time=0;
-  uint32_t rainbow_led_time=10;
+	uint32_t rainbow_pre_time=0;
+	uint32_t rainbow_led_time=10;
 	bool led_flg=false;
 	uint32_t led_count = 0;
-  for(;;)
-  {
+	for(;;)
+	{
 		uint16_t i, j;
 		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
 			if(millis()-rainbow_pre_time >= rainbow_led_time)
@@ -622,6 +630,7 @@ void StartTask02(void const * argument)
 				led_count = 0;
 				rainbow_led_time = 10;
 				if(g_break_flg == false) {
+					led_count = 0;
 					for(i=0; i< R_LED_CNT; i++) {
 						setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
 					}
@@ -653,36 +662,43 @@ void StartTask02(void const * argument)
 			}
 		}
 		osDelay(1);
-  }
-  /* USER CODE END StartTask02 */
+	}
+  /* USER CODE END StartRainBow_Task */
 }
 
-/* USER CODE BEGIN Header_StartTask03 */
+/* USER CODE BEGIN Header_StartAS504X_Task */
 /**
 * @brief Function implementing the AS504X_Task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void const * argument)
+/* USER CODE END Header_StartAS504X_Task */
+void StartAS504X_Task(void const * argument)
 {
-  /* USER CODE BEGIN StartTask03 */
+  /* USER CODE BEGIN StartAS504X_Task */
   /* Infinite loop */
   uint32_t Task03_pre_time = 0;
-  uint32_t Task03_led_time = 10000;
+  uint32_t Task03_led_time = 100;
+  uint32_t speed = 0;
   for(;;)
   {
 		if (millis()-Task03_pre_time >= Task03_led_time)
 		{
 			Task03_pre_time = millis();
-			if(g_break_flg == false)
-				g_break_flg = true;
-			else
+			g_speed += 10;
+			if(g_speed>1000) {
+				g_speed = 0;
+			}
+			if(g_break_flg == false) {
+				//g_break_flg = true;
+			}
+			else {
 				g_break_flg = false;
+			}
 		}
     osDelay(1);
   }
-  /* USER CODE END StartTask03 */
+  /* USER CODE END StartAS504X_Task */
 }
 
  /**
