@@ -35,13 +35,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define B_LED_CNT 16
+#define B_LED_CNT 20
 #define R_LED_CNT 128
-#define rotr(x,n)   (((x) >> ((int)((n) & 0x1f))) | ((x) << ((int)((32 - ((n) & 0x1f))))))
-#define rotl(x,n)   (((x) << ((int)((n) & 0x1f))) | ((x) >> ((int)((32 - ((n) & 0x1f))))))
 
-//#define INT_SIZE 12							//sizeof(int)        // Size of int in bytes
-#define INT_BITS 	16								//INT_SIZE * 8 - 1   // Size of int in bits - 1
+#define INT_BITS 	20								//INT_SIZE * 8 - 1   // Size of int in bits - 1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -168,7 +165,7 @@ int main(void)
 					}
 				}
 				for(uint32_t j=20; j>11; j--) {
-					if( test1 >> j & 0x01){
+					if( test1 >> (j-11) & 0x01){
 							ws2812SetColor(j, 255, 255, 255);
 					}else {
 						ws2812SetColor(j, 0, 0, 0);
