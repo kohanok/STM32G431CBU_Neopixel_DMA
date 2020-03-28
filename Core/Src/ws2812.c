@@ -12,16 +12,14 @@
 #define BIT_HIGH        (135)
 #define BIT_LOW         (67)
 
-bool is_init = false;
-
-
 typedef struct
 {
-  uint16_t led_cnt;
+  uint16_t break_led_cnt;
+  uint16_t ranbow_led_cnt;
 } ws2812_t;
 
 static uint8_t led_buf[50 + 24*64];
-static uint8_t led_buf_rainbow[50 + 24*64];
+static uint8_t led_buf_rainbow[50 + 24*128];
 
 ws2812_t ws2812;
 extern TIM_HandleTypeDef htim2;
@@ -32,18 +30,19 @@ extern TIM_HandleTypeDef htim17;
 bool ws2812Init(void)
 {
   memset(led_buf, 0, sizeof(led_buf));
-  is_init = true;
+  memset(led_buf_rainbow, 0, sizeof(led_buf));
 
   return true;
 }
 
-void ws2812Begin(uint32_t led_cnt)
+void ws2812Begin(uint32_t break_led_cnt, uint32_t ranbow_led_cnt)
 {
-  ws2812.led_cnt = led_cnt;
+  ws2812.break_led_cnt = break_led_cnt;
+  ws2812.ranbow_led_cnt = ranbow_led_cnt;
 
 
-  HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)led_buf, (50 + 24 *  ws2812.led_cnt) * 1);
-  HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)led_buf_rainbow, (50 + 24 *  ws2812.led_cnt) * 1);
+  HAL_TIM_PWM_Start_DMA(&htim2, TIM_CHANNEL_1, (uint32_t *)led_buf, (50 + 24 *  ws2812.break_led_cnt) * 1);
+  HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)led_buf_rainbow, (50 + 24 *  ws2812.ranbow_led_cnt) * 1);
 }
 
 void ws2812SetColor(uint32_t index, uint8_t red, uint8_t green, uint8_t blue)
@@ -145,24 +144,8 @@ void ws2812SetRanbowColor(uint32_t index, uint8_t red, uint8_t green, uint8_t bl
 }
 
 void setBrightness(uint8_t b) {
-  // Stored brightness value is different than what's passed.
-  // This simplifies the actual scaling math later, allowing a fast
-  // 8x8-bit multiply and taking the MSB. 'brightness' is a uint8_t,
-  // adding 1 here may (intentionally) roll over...so 0 = max brightness
-  // (color values are interpreted literally; no scaling), 1 = min
-  // brightness (off), 255 = just below max brightness.
   uint8_t newBrightness = b + 1;
   if(newBrightness != brightness) { // Compare against prior value
-    // Brightness has changed -- re-scale existing data in RAM,
-    // This process is potentially "lossy," especially when increasing
-    // brightness. The tight timing in the WS2811/WS2812 code means there
-    // aren't enough free cycles to perform this scaling on the fly as data
-    // is issued. So we make a pass through the existing color data in RAM
-    // and scale it (subsequent graphics commands also work at this
-    // brightness level). If there's a significant step up in brightness,
-    // the limited number of steps (quantization) in the old data will be
-    // quite visible in the re-scaled version. For a non-destructive
-    // change, you'll need to re-render the full strip data. C'est la vie.
     uint8_t  c,
             *ptr           = pixels,
              oldBrightness = brightness - 1; // De-wrap old brightness value
@@ -178,16 +161,8 @@ void setBrightness(uint8_t b) {
   }
 }
 
-
-/*!
-  @brief   Set a pixel's color using a 32-bit 'packed' RGB or RGBW value.
-  @param   n  Pixel index, starting from 0.
-  @param   c  32-bit color value. Most significant byte is white (for RGBW
-              pixels) or ignored (for RGB pixels), next is red, then green,
-              and least significant byte is blue.
-*/
 void setPixelColor(uint16_t n, uint32_t c) {
-  if(n < ws2812.led_cnt) {
+  if(n < ws2812.ranbow_led_cnt) {
     uint8_t *p,
       r = (uint8_t)(c >> 16),
       g = (uint8_t)(c >>  8),
@@ -212,8 +187,6 @@ void setPixelColor(uint16_t n, uint32_t c) {
 
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
 uint32_t Wheel(uint8_t WheelPos) {
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85) {
@@ -231,8 +204,6 @@ uint32_t Color(uint8_t r, uint8_t g, uint8_t b) {
   return ((uint32_t)r << 16) | ((uint32_t)g <<  8) | b;
 }
 
-// A 32-bit variant of gamma8() that applies the same function
-// to all components of a packed RGB or WRGB value.
 uint32_t gamma32(uint32_t x) {
   uint8_t *y = (uint8_t *)&x;
   for(uint8_t i=0; i<4; i++) y[i] = gamma8(y[i]);
