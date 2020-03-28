@@ -60,6 +60,7 @@ DMA_HandleTypeDef hdma_tim17_ch1;
 osThreadId Break_TaskHandle;
 osThreadId RainBow_TaskHandle;
 osThreadId AS504X_TaskHandle;
+bool g_break_flg = false;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -121,17 +122,6 @@ int main(void)
   ws2812Init();
   ws2812Begin(B_LED_CNT, R_LED_CNT);
 
-	bool led_flg=false;
-
-	uint32_t test_count = 0;
-
-  uint32_t led_index = 0;
-  int32_t  led_index_pre = -1;
-  uint8_t led_color = 0;
-
-	uint32_t led_mask= 0b1110000111;
-	uint32_t current_led=0;
-
 	//uint32_t led_index=0;
   /* USER CODE END 2 */
 
@@ -180,38 +170,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 
-//Break led pattern
-/*
-		if (millis()-pre_time >= led_time)
-		{
-			pre_time = millis();
-			led_count++;
-			//if(led_count == 40) {
-				//led_time = 100;
-			//}
-			if(led_count > 40) {
-				led_time = 1000;
-			}else {
-				led_time = 50;
-			}
-			if(led_count > 60) {
-					//led_time = 100;
-					led_count = 0;
-			}
-
-			if(led_flg) {
-				for(int i = 0; i < LED_CNT; i++) {
-					ws2812SetColor(i, 255, 0, 0);
-					led_flg = false;
-				}
-			}else {
-				for(int i = 0; i < LED_CNT; i++) {
-					ws2812SetColor(i, 0, 0, 0);
-					led_flg = true;
-				}
-			}
-		}
-*/
   }
 
   /* USER CODE END 3 */
@@ -575,28 +533,60 @@ void StartDefaultTask(void const * argument)
 	uint32_t halfled = 0;
 	uint32_t led_index = 0;
 	uint32_t led_mask= 0b1110000111;
+
+
+	bool led_flg=false;
+	uint32_t led_count = 0;
   for(;;)
   {
 
 		if(millis()-pre_time >= led_time)
 		{
 			pre_time = millis();
-			firstled = rotateLeft(led_mask, led_index%B_LED_CNT);
-			halfled = rotateRight(led_mask, led_index%B_LED_CNT);
+			if(g_break_flg == false) {
+				led_time = 200;
+				led_count = 0;
+				firstled = rotateLeft(led_mask, led_index%B_LED_CNT);
+				halfled = rotateRight(led_mask, led_index%B_LED_CNT);
 
-			led_index++;
-			for(uint32_t j=0; j<12; j++) {
-				if( firstled >> j & 0x01){
-						ws2812SetColor(j, 255, 255, 255);
-				}else {
-					ws2812SetColor(j, 0, 0, 0);
+				led_index++;
+				for(uint32_t j=0; j<12; j++) {
+					if( firstled >> j & 0x01){
+							ws2812SetColor(j, 255, 255, 255);
+					}else {
+						ws2812SetColor(j, 0, 0, 0);
+					}
+				}
+				for(uint32_t j=20; j>11; j--) {
+					if( halfled >> (j-11) & 0x01){
+							ws2812SetColor(j, 255, 255, 255);
+					}else {
+						ws2812SetColor(j, 0, 0, 0);
+					}
 				}
 			}
-			for(uint32_t j=20; j>11; j--) {
-				if( halfled >> (j-11) & 0x01){
-						ws2812SetColor(j, 255, 255, 255);
+			else{ // break
+				led_count++;
+				if(led_count > 30) {
+					led_time = 500;
 				}else {
-					ws2812SetColor(j, 0, 0, 0);
+					led_time = 50;
+				}
+				if(led_count > 40) {
+						//led_count = 0;
+						g_break_flg =false;
+				}
+
+				if(led_flg) {
+					for(int i = 0; i < B_LED_CNT; i++) {
+						ws2812SetColor(i, 255, 0, 0);
+						led_flg = false;
+					}
+				}else {
+					for(int i = 0; i < B_LED_CNT; i++) {
+						ws2812SetColor(i, 0, 0, 0);
+						led_flg = true;
+					}
 				}
 			}
 		}
@@ -619,7 +609,8 @@ void StartTask02(void const * argument)
 
   uint32_t rainbow_pre_time=0;
   uint32_t rainbow_led_time=10;
-
+	bool led_flg=false;
+	uint32_t led_count = 0;
   for(;;)
   {
 		uint16_t i, j;
@@ -628,8 +619,36 @@ void StartTask02(void const * argument)
 			{
 				rainbow_pre_time = millis();
 				j++;
-				for(i=0; i< R_LED_CNT; i++) {
-					setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
+				led_count = 0;
+				rainbow_led_time = 10;
+				if(g_break_flg == false) {
+					for(i=0; i< R_LED_CNT; i++) {
+						setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
+					}
+				}
+				else{ // break
+					led_count++;
+					if(led_count > 30) {
+						rainbow_led_time = 500;
+					}else {
+						rainbow_led_time = 50;
+					}
+					if(led_count > 40) {
+							//led_count = 0;
+							g_break_flg =false;
+					}
+
+					if(led_flg) {
+						for(int i = 0; i < B_LED_CNT; i++) {
+							setPixelColor(i, 0xff0000);
+							led_flg = false;
+						}
+					}else {
+						for(int i = 0; i < B_LED_CNT; i++) {
+							setPixelColor(i, 0);
+							led_flg = true;
+						}
+					}
 				}
 			}
 		}
@@ -649,8 +668,18 @@ void StartTask03(void const * argument)
 {
   /* USER CODE BEGIN StartTask03 */
   /* Infinite loop */
+  uint32_t Task03_pre_time = 0;
+  uint32_t Task03_led_time = 10000;
   for(;;)
   {
+		if (millis()-Task03_pre_time >= Task03_led_time)
+		{
+			Task03_pre_time = millis();
+			if(g_break_flg == false)
+				g_break_flg = true;
+			else
+				g_break_flg = false;
+		}
     osDelay(1);
   }
   /* USER CODE END StartTask03 */
