@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -56,6 +57,9 @@ TIM_HandleTypeDef htim17;
 DMA_HandleTypeDef hdma_tim2_ch1;
 DMA_HandleTypeDef hdma_tim17_ch1;
 
+osThreadId Break_TaskHandle;
+osThreadId RainBow_TaskHandle;
+osThreadId AS504X_TaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -67,6 +71,10 @@ static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM17_Init(void);
+void StartDefaultTask(void const * argument);
+void StartTask02(void const * argument);
+void StartTask03(void const * argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -113,11 +121,6 @@ int main(void)
   ws2812Init();
   ws2812Begin(B_LED_CNT, R_LED_CNT);
 
-  uint32_t pre_time=0;
-  uint32_t rainbow_pre_time=0;
-  uint32_t led_time=200;
-  uint32_t rainbow_led_time=10;
-  uint32_t led_count=10;
 	bool led_flg=false;
 
 	uint32_t test_count = 0;
@@ -128,11 +131,46 @@ int main(void)
 
 	uint32_t led_mask= 0b1110000111;
 	uint32_t current_led=0;
-	uint32_t test2=0;
-	uint32_t test1=0;
+
 	//uint32_t led_index=0;
   /* USER CODE END 2 */
 
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* definition and creation of Break_Task */
+  osThreadDef(Break_Task, StartDefaultTask, osPriorityNormal, 0, 128);
+  Break_TaskHandle = osThreadCreate(osThread(Break_Task), NULL);
+
+  /* definition and creation of RainBow_Task */
+  osThreadDef(RainBow_Task, StartTask02, osPriorityLow, 0, 128);
+  RainBow_TaskHandle = osThreadCreate(osThread(RainBow_Task), NULL);
+
+  /* definition and creation of AS504X_Task */
+  osThreadDef(AS504X_Task, StartTask03, osPriorityLow, 0, 128);
+  AS504X_TaskHandle = osThreadCreate(osThread(AS504X_Task), NULL);
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* Start scheduler */
+  osKernelStart();
+ 
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -140,39 +178,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		uint16_t i, j;
-		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
-			if(millis()-rainbow_pre_time >= rainbow_led_time)
-			{
-				rainbow_pre_time = millis();
-				j++;
-				for(i=0; i< R_LED_CNT; i++) {
-						setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
-				}
-			}
-			if(millis()-pre_time >= led_time)
-			{
-				pre_time = millis();
-				test2 = rotateLeft(led_mask, led_index%B_LED_CNT);
-				test1 = rotateRight(led_mask, led_index%B_LED_CNT);
 
-				led_index++;
-				for(uint32_t j=0; j<12; j++) {
-					if( test2 >> j & 0x01){
-							ws2812SetColor(j, 255, 255, 255);
-					}else {
-						ws2812SetColor(j, 0, 0, 0);
-					}
-				}
-				for(uint32_t j=20; j>11; j--) {
-					if( test1 >> (j-11) & 0x01){
-							ws2812SetColor(j, 255, 255, 255);
-					}else {
-						ws2812SetColor(j, 0, 0, 0);
-					}
-				}
-			}
-		}
 
 //Break led pattern
 /*
@@ -428,16 +434,16 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
   /* DMA2_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Channel1_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel1_IRQn);
   /* DMA2_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA2_Channel2_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel2_IRQn);
 
 }
@@ -551,6 +557,125 @@ int rotateRight(int num, unsigned int rotation)
     return num;
 }
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the Break_Task thread.
+  * @param  argument: Not used 
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  uint32_t pre_time = 0;
+  uint32_t led_time = 200;
+	uint32_t firstled = 0;
+	uint32_t halfled = 0;
+	uint32_t led_index = 0;
+	uint32_t led_mask= 0b1110000111;
+  for(;;)
+  {
+
+		if(millis()-pre_time >= led_time)
+		{
+			pre_time = millis();
+			firstled = rotateLeft(led_mask, led_index%B_LED_CNT);
+			halfled = rotateRight(led_mask, led_index%B_LED_CNT);
+
+			led_index++;
+			for(uint32_t j=0; j<12; j++) {
+				if( firstled >> j & 0x01){
+						ws2812SetColor(j, 255, 255, 255);
+				}else {
+					ws2812SetColor(j, 0, 0, 0);
+				}
+			}
+			for(uint32_t j=20; j>11; j--) {
+				if( halfled >> (j-11) & 0x01){
+						ws2812SetColor(j, 255, 255, 255);
+				}else {
+					ws2812SetColor(j, 0, 0, 0);
+				}
+			}
+		}
+    osDelay(1);
+  }
+  /* USER CODE END 5 */ 
+}
+
+/* USER CODE BEGIN Header_StartTask02 */
+/**
+* @brief Function implementing the RainBow_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask02 */
+void StartTask02(void const * argument)
+{
+  /* USER CODE BEGIN StartTask02 */
+  /* Infinite loop */
+
+  uint32_t rainbow_pre_time=0;
+  uint32_t rainbow_led_time=10;
+
+  for(;;)
+  {
+		uint16_t i, j;
+		for(j=0; j<256*5;) { // 5 cycles of all colors on wheel
+			if(millis()-rainbow_pre_time >= rainbow_led_time)
+			{
+				rainbow_pre_time = millis();
+				j++;
+				for(i=0; i< R_LED_CNT; i++) {
+					setPixelColor(i, Wheel(((i * 256 / R_LED_CNT) + j) & 255));
+				}
+			}
+		}
+		osDelay(1);
+  }
+  /* USER CODE END StartTask02 */
+}
+
+/* USER CODE BEGIN Header_StartTask03 */
+/**
+* @brief Function implementing the AS504X_Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask03 */
+void StartTask03(void const * argument)
+{
+  /* USER CODE BEGIN StartTask03 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTask03 */
+}
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
